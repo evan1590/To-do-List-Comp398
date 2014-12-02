@@ -75,7 +75,7 @@ router.route('/items')
 	// create a to-do item (accessed at POST http://localhost:8080/api/items)
 	.post(function(req, res, next) { // creating 
 			  mongo.Db.connect(mongoUri, function (err, db){
-			  	db.collection('todo', function(er, collection) {
+			  	db.collection('tasks', function(er, collection) {
 			  		var documentToInsert = {todo: req.query.todo, when: req.query.when, instructions: req.query.instructions};
 			  		collection.insert(documentToInsert, function(err, records){
 			  			res.send(records[0]);
