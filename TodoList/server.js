@@ -5,6 +5,7 @@
 
 // call the packages we need
 var express = require('express');
+var mongo = require('mongodb');
 var app = express();
 var bodyParser = require('body-parser');
 app.engine('html', require('ejs').renderFile);
@@ -21,6 +22,12 @@ db.once('open', function callback () {
 
 var Task = require('../TodoList/models/todo');
 
+
+var mongoUri = process.env.MONGOLAB_398 ||
+  'mongodb://localhost/mydb';
+
+//var mongoUri = 'mongodb://project2:project2@ds053130.mongolab.com:53130/todo'
+console.log(mongoUri);
 
 // configure app to use bodyParser()
 // this will let us get the data from a POST
@@ -66,25 +73,38 @@ router.get('/', function(req, res) {
 router.route('/items')
 
 	// create a to-do item (accessed at POST http://localhost:8080/api/items)
-	.post(function(req, res) {
-		console.log('in post');
+	.post(function(req, res, next) { // creating 
+			  mongo.Db.connect(mongoUri, function (err, db){
+			  	db.collection('todo', function(er, collection) {
+			  		var documentToInsert = {todo: req.query.todo, when: req.query.when, instructions: req.query.instructions};
+			  		collection.insert(documentToInsert, function(err, records){
+			  			res.send(records[0]);
+			  		});
+			  	}); // ends db.collection
+			  }); // ends mongo.Db.connect
+			})// ends post (creating)
+	
+	// .post(function(req, res) {
+	// 	console.log('in post');
 		
-		var task = new Task(); // create a new instance of the Task model
-		task.todo = req.body.todo; // set what to do (comes from the request)
-		task.when = req.body.when; // set when to do it
-		task.instructions = req.body.instructions; //set any extra instuctions
-		task.tag = req.body.tag; // set a tag/keyword for searching
+	// 	var task = new Task(); // create a new instance of the Task model
+	// 	task.todo = req.body.todo; // set what to do (comes from the request)
+	// 	task.when = req.body.when; // set when to do it
+	// 	task.instructions = req.body.instructions; //set any extra instuctions
+	// 	task.tag = req.body.tag; // set a tag/keyword for searching
 
-		// save the item and check for errors
-		console.log('new to-do item');
-		task.save(function(err) {
-			if (err)
-				//console.log(err);
-				res.send(err);
 			
-			res.json({ message: 'To-do item created!' });
-		});
-	})
+
+	// 	// save the item and check for errors
+	// 	console.log('new to-do item');
+	// 	task.save(function(err) {
+	// 		if (err)
+	// 			//console.log(err);
+	// 			res.send(err);
+			
+	// 		res.json({ message: 'To-do item created!' });
+	// 	});
+	// })
 
 	// get all the items (accessed at GET http://localhost:8080/api/items)
 	.get(function(req, res) {

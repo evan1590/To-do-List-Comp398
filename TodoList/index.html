@@ -15,32 +15,127 @@
 	<body>
 		<div class="container">
 			<div class="jumbotron">
-				
+				<div class="row">
+				  	<div class="col-lg-6">
+				    	<div class="input-group">
+				      		
+				      		<p>Title: <span><input type="text" class="form-control" id="inputfield"></span></p>
+				      		
+				      		<p>When: <span><input type="text" class="form-control" id="inputfield1"></span></p>
+				      		
+				      		<p>Notes: <span><input type="text" class="form-control" id="inputfield2"></span></p>
+				    		
+				    		<button class="btn btn-default" type="button" id="add">New To-Do item</button>
+				    	</div><!-- /input-group -->
+				  	</div><!-- /.col-lg-6 -->
+				  	
+				</div>
 			</div>
 		</div>
 
-		<div class="container">
-			<table class="table table-striped" style="width: 90%; margin: auto;">
-				<thead>
-				  <tr>
-				    <th>Title</th>
-				    <th>External Link</th>
-				  </tr>
-				</thead>
-				<tbody id="list">
-				</tbody>
-  			</table>
+		<div class="container" id="list">
+			
 		</div>
 	</body>
+	
 	<script type="text/javascript">
-		$.ajax({
-		    type: 'GET',
-		    url: ' http://localhost:8080/api/items',
-		    success: function(data) {
-		      for (var item in data) {
-		        $("#list").append("<tr><td>" + data[item].todo  + "</td><td>" + data[item].when + "</td></tr>");
-		      }
-		    }
+		$( document ).ready(function() {
+    			console.log( "ready!" );
+    			GetAll();
+			}); // ends ready
+
+		function GetAll () {
+			// body...
+			$.ajax({
+			    type: 'GET',
+			    url: ' http://localhost:8080/api/items',
+			    success: function(data) {
+			      for (var item in data) {
+			        $("#list").append("<div class='row'><div class='col-sm-6 col-md-4' id =" + data[item]['_id'] + "><div class='thumbnail'><div class='caption'><h3>" + data[item]['todo'] + "     " + data[item]['when'] +"</h3><p> " + data[item]['instructions']+ "</p><p><a class='btn btn-primary' role='button' onclick = \"DeleteDomElement('"+data[item]['_id']+"')\">Delete</a></p></div></div></div></div>");
+			      }
+			    }
+			});
+		}
+		
+		function createFeature (todo, when, note) {
+			$.ajax({
+				type: 'POST',
+				url: 'http://localhost:8080/api/items/?todo='+todo+'&when='+when+'&instructions='+note,
+				success: function(data) {
+					console.log("Created todo");
+					console.log(data);
+					console.log(todo);
+					//argument = data['_id'];
+					whenArgument = data['when'];
+					todoArgument = data['todo'];
+					noteArgument = data['instructions'];
+
+					 $("#list").append("<div class='row'><div class='col-sm-6 col-md-4'><div class='thumbnail'><div class='caption'><h3>" + todoArgument + "     " + whenArgument +"</h3><p> " + noteArgument + "</p><p><a class='btn btn-primary' role='button' onclick = \"DeleteDomElement('"+data['_id']+"')\">Delete</a></p></div></div></div></div>");
+
+				} // ends success
+			}); // ends ajax call
+		} // ends create feature
+			
+		function checkForValidTitle (titleValue, whenValue, noteValue) {
+			if (titleValue === "") {
+				alert("No Title Given!");
+				// checkForValidTitle(titleValue, externalValue);
+			}
+			else {
+				if (whenValue === "") {
+					whenValue = "N/A"
+				};
+				if (noteValue === "") {
+					noteValue = "N/A"
+				};
+				createFeature(titleValue, whenValue, noteValue);
+			}; // ends else statement
+			
+		} // ends checkForValidTitle
+
+		$('#add').click(function(){
+			var x = $('#inputfield').val();
+			var y = $('#inputfield1').val();
+			var z = $('#inputfield2').val();
+			console.log(x);
+			checkForValidTitle(x, y, z);
+			
 		});
+
+//---------------------------------------------------
+// Delete from data base and delete from content div \
+//----------------------------------------------------			
+
+		function deleteFromDatabase (ToDelete) {
+			$.ajax({
+		 		type: 'DELETE',
+		 		url: 'http://localhost:8080/api/items/'+ToDelete,
+		 		success: function(data) {
+		 			console.log("has been deleted!");
+		 		} // ends success
+		 	}); // ends Ajax call
+		}; //ends deleteFromDatabase
+
+		function DeleteDomElement (idToDelete) {
+		 	console.log(idToDelete);
+		 	$("#"+idToDelete).remove();
+		 	deleteFromDatabase(idToDelete);
+
+		}; // ends DeleteDomElement
+	
 	</script>
+
 </html>
+<!-- <div class="row">
+  <div class="col-sm-6 col-md-4">
+    <div class="thumbnail">
+      <div class="caption">
+        <h3></h3>
+        <p>...</p>
+        <p><a class="btn btn-primary" role="button">Delete</a></p>
+      </div>
+    </div>
+  </div>
+</div> -->
+
+<!-- "<tr><td>" + data[item].todo  + "</td><td>" + data[item].when + "</td></tr>" -->
